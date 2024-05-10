@@ -57,14 +57,11 @@ def recommend_companies(user_input, df):
     for index, row in df.iterrows():
         combined_info = row['industry'] + " " + row['main_product']
         combined_info_vector = get_vector(combined_info)
-        
         sim_score_tensor = (1 + cosine_similarity(user_input_vector, combined_info_vector)) / 2 * 100
         sim_score = sim_score_tensor.item()  # 스칼라 값으로 변환
         scores.append((index, sim_score))
     
     scores = sorted(scores, key=lambda x: x[1], reverse=True)
-    
-    # 여기에서 scores[:5]를 scores[:4]로 변경하여 상위 4개의 항목만 반환하게 합니다.
     recommendations = [(df['name'].iloc[i[0]], i[1]) for i in scores[:4]]
     
     return recommendations
@@ -75,8 +72,13 @@ if __name__ == "__main__":
     
     user_input = input("키워드나 조건을 입력하세요: ")
     recommendations = recommend_companies(user_input, df)
-    print("추천하는 ESG 기업들:")
-    for i, (company_name, score) in enumerate(recommendations, 1):
-        # 회사의 ESG 수준을 가져오기 위해 데이터프레임에서 'name' 컬럼이 company_name과 일치하는 행을 찾습니다.
-        esg_level = df[df['name'] == company_name]['esg_level'].iloc[0]
-        print(f"{i}번: {company_name} (ESG 수준: {esg_level})(유사도: {score:.2f}%)")
+
+
+    backend_data = []
+
+    for company_name, score in recommendations:
+        backend_data.append({
+            'company_name': company_name,
+            'similarity_score': score
+        })
+
